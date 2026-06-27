@@ -3,10 +3,7 @@ import { Play, Settings2 } from 'lucide-react';
 import { audioEngine, type InstrumentType } from '../utils/audioEngine';
 import { NOTES, CHORD_GROUPS, getChordNotes, type Note, type ChordDefinition } from '../utils/musicTheory';
 
-type Mode = 'FIX_KEY' | 'FIX_CHORD';
-
 export default function ChordPlayer() {
-  const [mode, setMode] = useState<Mode>('FIX_KEY');
   const [selectedKey, setSelectedKey] = useState<Note>('C');
   const [selectedChord, setSelectedChord] = useState<ChordDefinition>(CHORD_GROUPS[0].chords[0]);
   const [instrument, setInstrument] = useState<InstrumentType>('FMSynth');
@@ -37,31 +34,6 @@ export default function ChordPlayer() {
     audioEngine.setInstrument(newInst);
   };
 
-  const renderChordGroups = () => (
-    <div className="grid-section">
-      <h3 className="section-title">Select Chord Type</h3>
-      {CHORD_GROUPS.map((group) => (
-        <div key={group.category} className="chord-group-container">
-          <h4 className="group-title">{group.category}</h4>
-          <div className="item-grid chord-grid">
-            {group.chords.map((chord) => (
-              <button
-                key={chord.name}
-                className={`btn-item ${selectedChord.name === chord.name ? 'active' : ''}`}
-                onClick={() => {
-                  setSelectedChord(chord);
-                  handlePlayChord(selectedKey, chord);
-                }}
-              >
-                <span>{chord.name}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-
   return (
     <>
       <header className="header">
@@ -82,23 +54,7 @@ export default function ChordPlayer() {
       </div>
 
       <div className="controls-card">
-        <div className="toolbar">
-          <div className="toggle-group">
-            <span className="toggle-label">Mode:</span>
-            <button 
-              className={`btn-toggle ${mode === 'FIX_KEY' ? 'active' : ''}`}
-              onClick={() => setMode('FIX_KEY')}
-            >
-              Fix Key
-            </button>
-            <button 
-              className={`btn-toggle ${mode === 'FIX_CHORD' ? 'active' : ''}`}
-              onClick={() => setMode('FIX_CHORD')}
-            >
-              Fix Chord
-            </button>
-          </div>
-
+        <div className="toolbar" style={{ justifyContent: 'flex-end' }}>
           <div className="select-group">
             <Settings2 size={20} className="text-muted" />
             <span className="toggle-label">Instrument:</span>
@@ -110,49 +66,43 @@ export default function ChordPlayer() {
           </div>
         </div>
 
-        {mode === 'FIX_KEY' ? (
-          <>
-            <div className="grid-section">
-              <h3 className="section-title">Select Key</h3>
-              <div className="item-grid">
-                {NOTES.map((note) => (
+        <div className="grid-section">
+          <h3 className="section-title">Select Key</h3>
+          <div className="item-grid">
+            {NOTES.map((note) => (
+              <button
+                key={note}
+                className={`btn-item ${selectedKey === note ? 'active' : ''}`}
+                onClick={() => setSelectedKey(note)}
+              >
+                {note}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="grid-section">
+          <h3 className="section-title">Select Chord Type</h3>
+          {CHORD_GROUPS.map((group) => (
+            <div key={group.category} className="chord-group-container">
+              <h4 className="group-title">{group.category}</h4>
+              <div className="item-grid chord-grid">
+                {group.chords.map((chord) => (
                   <button
-                    key={note}
-                    className={`btn-item ${selectedKey === note ? 'active' : ''}`}
+                    key={chord.name}
+                    className={`btn-item ${selectedChord.name === chord.name ? 'active' : ''}`}
                     onClick={() => {
-                      setSelectedKey(note);
-                      handlePlayChord(note, selectedChord);
+                      setSelectedChord(chord);
+                      handlePlayChord(selectedKey, chord);
                     }}
                   >
-                    {note}
+                    <span>{chord.name}</span>
                   </button>
                 ))}
               </div>
             </div>
-            {renderChordGroups()}
-          </>
-        ) : (
-          <>
-            {renderChordGroups()}
-            <div className="grid-section">
-              <h3 className="section-title">Select Key</h3>
-              <div className="item-grid">
-                {NOTES.map((note) => (
-                  <button
-                    key={note}
-                    className={`btn-item ${selectedKey === note ? 'active' : ''}`}
-                    onClick={() => {
-                      setSelectedKey(note);
-                      handlePlayChord(note, selectedChord);
-                    }}
-                  >
-                    {note}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </>
-        )}
+          ))}
+        </div>
       </div>
     </>
   );
