@@ -1,13 +1,18 @@
 import { useState, useEffect } from 'react';
-import { Search, Play } from 'lucide-react';
+import { Search, Play, Loader2 } from 'lucide-react';
 import { audioEngine } from '../utils/audioEngine';
 import { NOTES, type Note, detectChords, type DetectedChord, getChordNotes } from '../utils/musicTheory';
 
 export default function ChordAnalyzer() {
   const [selectedNotes, setSelectedNotes] = useState<Note[]>([]);
   const [playingIndex, setPlayingIndex] = useState<number | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
+    audioEngine.onLoadStateChange = (loading) => {
+      setIsLoading(loading);
+    };
+
     const initAudio = () => {
       audioEngine.initialize();
       document.removeEventListener('click', initAudio);
@@ -29,6 +34,7 @@ export default function ChordAnalyzer() {
   };
 
   const handlePlay = (match: DetectedChord, index: number) => {
+    if (isLoading) return;
     const notes = getChordNotes(match.root, match.chord);
     audioEngine.playChord(notes);
     setPlayingIndex(index);
@@ -107,10 +113,23 @@ export default function ChordAnalyzer() {
                 <button
                   className={`btn-toggle ${playingIndex === index ? 'active' : ''}`}
                   onClick={() => handlePlay(match, index)}
-                  style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', padding: '0.4rem 0.7rem', flexShrink: 0 }}
+                  disabled={isLoading}
+                  style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '0.3rem', 
+                    padding: '0.4rem 0.7rem', 
+                    flexShrink: 0,
+                    opacity: isLoading ? 0.6 : 1,
+                    cursor: isLoading ? 'not-allowed' : 'pointer'
+                  }}
                   aria-label={`Play ${match.root} ${match.chord.name}`}
                 >
-                  <Play size={16} fill="currentColor" />
+                  {isLoading && playingIndex === index ? (
+                     <Loader2 size={16} className="animate-spin" />
+                  ) : (
+                     <Play size={16} fill="currentColor" />
+                  )}
                   <span>Play</span>
                 </button>
               </div>

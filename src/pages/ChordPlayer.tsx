@@ -1,24 +1,33 @@
 import { useState, useEffect } from 'react';
-import { Play, Settings2 } from 'lucide-react';
+import { Play, Settings2, Loader2 } from 'lucide-react';
 import { audioEngine, type InstrumentType } from '../utils/audioEngine';
 import { NOTES, CHORD_GROUPS, getChordNotes, type Note, type ChordDefinition } from '../utils/musicTheory';
 
 export default function ChordPlayer() {
   const [selectedKey, setSelectedKey] = useState<Note>('C');
   const [selectedChord, setSelectedChord] = useState<ChordDefinition>(CHORD_GROUPS[0].chords[0]);
-  const [instrument, setInstrument] = useState<InstrumentType>('FMSynth');
+  const [instrument, setInstrument] = useState<InstrumentType>('Piano'); // Default to Piano
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   
   useEffect(() => {
+    audioEngine.onLoadStateChange = (loading) => {
+      setIsLoading(loading);
+    };
+
     const initAudio = () => {
       audioEngine.initialize();
       document.removeEventListener('click', initAudio);
     };
     document.addEventListener('click', initAudio);
-    return () => document.removeEventListener('click', initAudio);
+    
+    return () => {
+      document.removeEventListener('click', initAudio);
+    };
   }, []);
 
   const handlePlayChord = (root: Note, chord: ChordDefinition) => {
+    if (isLoading) return;
     const notes = getChordNotes(root, chord);
     audioEngine.playChord(notes);
     
@@ -45,12 +54,15 @@ export default function ChordPlayer() {
         <h2>{selectedKey} {selectedChord.name}</h2>
         <p>Notes: {getChordNotes(selectedKey, selectedChord).join(', ')}</p>
         <button 
-          className={`play-button ${isPlaying ? 'playing' : ''}`}
+          className={`play-button ${isPlaying && !isLoading ? 'playing' : ''}`}
           onClick={() => handlePlayChord(selectedKey, selectedChord)}
+          disabled={isLoading}
+          style={isLoading ? { opacity: 0.6, cursor: 'not-allowed' } : {}}
           aria-label="Play Chord"
         >
-          <Play size={32} fill="currentColor" />
+          {isLoading ? <Loader2 size={32} className="animate-spin" /> : <Play size={32} fill="currentColor" />}
         </button>
+        {isLoading && <p style={{ fontSize: '0.8rem', marginTop: '0.5rem', color: 'var(--primary-color)' }}>Loading samples...</p>}
       </div>
 
       <div className="controls-card">
@@ -58,7 +70,8 @@ export default function ChordPlayer() {
           <div className="select-group">
             <Settings2 size={20} className="text-muted" />
             <span className="toggle-label">Instrument:</span>
-            <select value={instrument} onChange={handleInstrumentChange}>
+            <select value={instrument} onChange={handleInstrumentChange} disabled={isLoading}>
+              <option value="Piano">Grand Piano</option>
               <option value="FMSynth">FM Synth (E-Piano like)</option>
               <option value="AMSynth">AM Synth (Complex)</option>
               <option value="Synth">Basic Synth</option>
@@ -74,6 +87,8 @@ export default function ChordPlayer() {
                 key={note}
                 className={`btn-item ${selectedKey === note ? 'active' : ''}`}
                 onClick={() => setSelectedKey(note)}
+                disabled={isLoading}
+                style={isLoading ? { opacity: 0.6 } : {}}
               >
                 {note}
               </button>
@@ -92,9 +107,12 @@ export default function ChordPlayer() {
                     key={chord.name}
                     className={`btn-item ${selectedChord.name === chord.name ? 'active' : ''}`}
                     onClick={() => {
+                      if (isLoading) return;
                       setSelectedChord(chord);
                       handlePlayChord(selectedKey, chord);
                     }}
+                    disabled={isLoading}
+                    style={isLoading ? { opacity: 0.6 } : {}}
                   >
                     <span>{chord.name}</span>
                   </button>
