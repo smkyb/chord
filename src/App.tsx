@@ -1,7 +1,8 @@
 import { HashRouter as Router, Routes, Route, NavLink } from 'react-router-dom';
-import { Music, Search } from 'lucide-react';
+import { Music, Search, Gamepad2 } from 'lucide-react';
 import ChordPlayer from './pages/ChordPlayer';
 import ChordAnalyzer from './pages/ChordAnalyzer';
+import ChordQuiz from './pages/ChordQuiz';
 
 function App() {
   return (
@@ -23,11 +24,19 @@ function App() {
             <Search size={20} />
             <span>Analyzer</span>
           </NavLink>
+          <NavLink 
+            to="/quiz" 
+            className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+          >
+            <Gamepad2 size={20} />
+            <span>Quiz</span>
+          </NavLink>
         </nav>
 
         <Routes>
           <Route path="/" element={<ChordPlayer />} />
           <Route path="/analyze" element={<ChordAnalyzer />} />
+          <Route path="/quiz" element={<ChordQuiz />} />
         </Routes>
         
         <footer>

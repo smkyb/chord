@@ -307,6 +307,29 @@ select {
   }
 }
 
+/* Quiz Feedback Styles */
+.btn-item.correct {
+  background-color: var(--accent-color) !important;
+  color: white !important;
+  border-color: var(--accent-color) !important;
+}
+
+.btn-item.wrong {
+  background-color: #ef4444 !important;
+  color: white !important;
+  border-color: #ef4444 !important;
+}
+
+.btn-item.missed {
+  background-color: transparent !important;
+  color: var(--accent-color) !important;
+  border-color: var(--accent-color) !important;
+  border-width: 2px !important;
+}
+
+.opacity-50 {
+  opacity: 0.5 !important;
+}
 
 footer {
   text-align: center;
