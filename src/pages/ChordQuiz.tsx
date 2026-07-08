@@ -147,14 +147,44 @@ export default function ChordQuiz() {
               Answer: {currentRoot} {currentChord.name}
             </p>
             <p>Notes: {actualNotes.join(', ')}</p>
-            <button 
-              className="play-button"
-              onClick={generateNewChord}
-              style={{ width: 'auto', padding: '0 2rem', borderRadius: '2rem', gap: '0.5rem', marginTop: '1rem' }}
-            >
-              <RefreshCw size={24} />
-              <span>Next Chord</span>
-            </button>
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', marginTop: '1rem', flexWrap: 'wrap' }}>
+              <button 
+                className={`play-button ${isPlaying && !isLoading ? 'playing' : ''}`}
+                onClick={playCurrentChord}
+                disabled={isLoading}
+                style={{ 
+                  margin: 0, 
+                  width: 'auto', 
+                  padding: '0.5rem 1.5rem', 
+                  borderRadius: '2rem', 
+                  gap: '0.5rem',
+                  fontSize: '0.95rem',
+                  height: 'auto',
+                  opacity: isLoading ? 0.6 : 1,
+                  cursor: isLoading ? 'not-allowed' : 'pointer'
+                }}
+              >
+                {isLoading ? <Loader2 size={18} className="animate-spin" /> : <Play size={18} fill="currentColor" />}
+                <span>Play Again</span>
+              </button>
+              <button 
+                className="play-button"
+                onClick={generateNewChord}
+                style={{ 
+                  margin: 0, 
+                  width: 'auto', 
+                  padding: '0.5rem 1.5rem', 
+                  borderRadius: '2rem', 
+                  gap: '0.5rem', 
+                  fontSize: '0.95rem',
+                  height: 'auto',
+                  background: 'var(--accent-color)' 
+                }}
+              >
+                <RefreshCw size={18} />
+                <span>Next Chord</span>
+              </button>
+            </div>
           </>
         ) : (
           <>
