@@ -21,6 +21,13 @@ export default function ChordQuiz() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  // Streak states
+  const [streak, setStreak] = useState(0);
+  const [maxStreak, setMaxStreak] = useState(() => {
+    const saved = localStorage.getItem('chord-quiz-max-streak');
+    return saved ? parseInt(saved, 10) : 0;
+  });
+
   // Pick a random chord that fits within the 2-octave range
   const generateNewChord = useCallback(() => {
     const validCombinations: {root: Note, chord: ChordDefinition}[] = [];
@@ -88,17 +95,6 @@ export default function ChordQuiz() {
   const checkAnswer = () => {
     if (selectedNotes.length === 0) return;
     
-    // Sort both arrays to compare correctly, ignoring order
-    // But our notes have octaves, so direct string comparison after sort is fine.
-    // However, some chords might span into octave 6 if root is high. 
-    // Wait, getChordNotes uses rootIndex + interval. If interval + rootIndex >= 12, octave increases.
-    // E.g., root 'A' (index 9) + major 3rd (interval 4) = index 1, octave 5 -> 'C#5'.
-    // If root is 'A' and interval is 14 (9th), index 9+14=23. 23/12 = 1. Octave = 4 + 1 = 5. Note = 'B5'.
-    // So the maximum note is 'B5' except for some high roots with 13ths (interval 21).
-    // root 'B' (index 11) + 21 = 32. 32/12 = 2. Octave = 4 + 2 = 6. Note = 'G#6'.
-    // Our UI only has C4 to B5! If a chord goes to octave 6, it cannot be guessed.
-    // To fix this without changing UI, we can limit the base octave or ensure the chord notes fall within 2 octaves.
-    
     const sortedSelected = [...selectedNotes].sort();
     const sortedActual = [...actualNotes].sort();
     
@@ -107,6 +103,17 @@ export default function ChordQuiz() {
     
     setIsCorrect(correct);
     setIsRevealed(true);
+
+    if (correct) {
+      const newStreak = streak + 1;
+      setStreak(newStreak);
+      if (newStreak > maxStreak) {
+        setMaxStreak(newStreak);
+        localStorage.setItem('chord-quiz-max-streak', newStreak.toString());
+      }
+    } else {
+      setStreak(0);
+    }
   };
 
   // Helper to determine button styling based on state
@@ -137,16 +144,22 @@ export default function ChordQuiz() {
         <p>Listen to the chord and guess the notes</p>
       </header>
 
-      <div className="chord-display" style={{ minHeight: '180px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+      <div className="chord-display" style={{ minHeight: '210px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+        {/* Streak Dashboard */}
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '1.5rem', marginBottom: '0.75rem', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
+          <span>Current Streak: <strong style={{ color: 'var(--primary-color)' }}>{streak}</strong> 🔥</span>
+          <span>Best Streak: <strong style={{ color: 'var(--accent-color)' }}>{maxStreak}</strong> 🏆</span>
+        </div>
+
         {isRevealed ? (
           <>
-            <h2 style={{ color: isCorrect ? 'var(--accent-color)' : '#ef4444', marginBottom: '0.5rem', fontSize: '2.5rem' }}>
+            <h2 style={{ color: isCorrect ? 'var(--accent-color)' : '#ef4444', marginBottom: '0.5rem', fontSize: '2.25rem' }}>
               {isCorrect ? 'Correct!' : 'Incorrect'}
             </h2>
             <p style={{ fontSize: '1.25rem', fontWeight: 'bold', color: 'var(--text-color)' }}>
               Answer: {currentRoot} {currentChord.name}
             </p>
-            <p>Notes: {actualNotes.join(', ')}</p>
+            <p style={{ fontSize: '0.95rem' }}>Notes: {actualNotes.join(', ')}</p>
             <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', marginTop: '1rem', flexWrap: 'wrap' }}>
               <button 
                 className={`play-button ${isPlaying && !isLoading ? 'playing' : ''}`}
